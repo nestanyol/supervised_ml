@@ -3,10 +3,14 @@ title: "supervised_ml_cars"
 format: html
 ---
 ```{r}
+if (!require("tidyverse")) install.packages("tidyverse")
 library(tidyverse)
+if (!require("usethis")) install.packages("usethis")
 library(usethis)
+if (!require("tidymodels")) install.packages("tidymodels")
+library(tidymodels)
 ```
-##Visualize
+## Visualize
 
 ```{r}
 cars2018 <- read_csv("data/cars2018.csv")
@@ -24,7 +28,7 @@ cars2018 %>%
   )
 ```
 
-Build a regression model
+## Build a simple regression model:
 ```{r}
 # Deselect the 2 columns to create cars_vars. Individual identifiers
 car_vars <- cars2018 %>%
@@ -36,3 +40,38 @@ fit_all <- lm(mpg ~ ., data = car_vars)
 # Print the summary of the model
 summary(fit_all)
 ```
+
+## Splitting data: Training and testing datasets.
+
+(Tidymodels)
+```{r}
+car_split <- car_vars %>%
+    initial_split(prop = 0.8,
+                  strata = aspiration)
+
+car_train <- training(car_split)
+car_test <- testing(car_split)
+```
+
+
+## Training model.
+```{r}
+## a linear regression model specification
+lm_mod <- linear_reg() %>%
+    set_engine("lm")
+
+lm_fit <- lm_mod %>%
+    fit(log(mpg) ~ ., 
+        data = car_train)
+
+## a random forest model specification
+rf_mod <- rand_forest() %>%
+    set_mode("regression") %>%
+    set_engine("randomForest")
+
+fit_rf <- rf_mod %>%
+    fit(log(mpg) ~ ., 
+        data = car_train)   
+```
+
+
